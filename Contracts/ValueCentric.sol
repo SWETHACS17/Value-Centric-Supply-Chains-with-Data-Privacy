@@ -1,46 +1,89 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
+
+import "./oz/AccessControl.sol";
 
 /**
- * Minimal OpenZeppelin AccessControl for local testing
+ * @title ValueCentric
+ * @dev Simulated privacy-preserving supply chain contract using role-based access control
  */
-contract AccessControl {
-    mapping(bytes32 => mapping(address => bool)) internal _roles;
-    mapping(bytes32 => bytes32) internal _roleAdmins;
+contract ValueCentric is AccessControl {
+    // Define supply chain roles
+    bytes32 public constant SUPPLIER_ROLE = keccak256("SUPPLIER_ROLE");
+    bytes32 public constant MANUFACTURER_ROLE = keccak256("MANUFACTURER_ROLE");
+    bytes32 public constant DISTRIBUTOR_ROLE = keccak256("DISTRIBUTOR_ROLE");
+    bytes32 public constant RETAILER_ROLE = keccak256("RETAILER_ROLE");
 
-    event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender);
-    event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender);
+    struct Product {
+        uint256 id;
+        string name;
+        string batchNumber;
+        address currentOwner;
+        bool verified;
+    }
 
-    bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
+    uint256 private _nextProductId;
+    mapping(uint256 => Product) private _products;
+
+    event ProductCreated(uint256 indexed id, string name, string batchNumber, address indexed creator);
+    event OwnershipTransferred(uint256 indexed id, address indexed from, address indexed to);
+    event ProductVerified(uint256 indexed id, bool verified, string proof);
 
     constructor() {
-        _roles[DEFAULT_ADMIN_ROLE][msg.sender] = true;
+        // The deployer gets the admin and supplier role by default
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(SUPPLIER_ROLE, msg.sender);
     }
 
-    modifier onlyRole(bytes32 role) {
-        require(hasRole(role, msg.sender), "AccessControl: account missing role");
-        _;
+    // Supplier creates a product
+    function createProduct(string memory name, string memory batchNumber)
+        external
+        onlyRole(SUPPLIER_ROLE)
+    {
+        uint256 productId = ++_nextProductId;
+
+        _products[productId] = Product({
+            id: productId,
+            name: name,
+            batchNumber: batchNumber,
+            currentOwner: msg.sender,
+            verified: false
+        });
+
+        emit ProductCreated(productId, name, batchNumber, msg.sender);
     }
 
-    function hasRole(bytes32 role, address account) public view returns (bool) {
-        return _roles[role][account];
+    // Transfer ownership between supply chain roles
+    function transferOwnership(uint256 productId, address newOwner)
+        external
+    {
+        Product storage product = _products[productId];
+        require(product.currentOwner == msg.sender, "Not product owner");
+        require(newOwner != address(0), "Invalid new owner");
+
+        address previousOwner = product.currentOwner;
+        product.currentOwner = newOwner;
+
+        emit OwnershipTransferred(productId, previousOwner, newOwner);
     }
 
-    function getRoleAdmin(bytes32 role) public view returns (bytes32) {
-        return _roleAdmins[role];
+    // Simulated zero-knowledge proof verification
+    function verifyProduct(uint256 productId, string memory zkProof)
+        external
+        onlyRole(MANUFACTURER_ROLE)
+    {
+        Product storage product = _products[productId];
+        product.verified = true;
+
+        emit ProductVerified(productId, true, zkProof);
     }
 
-    function grantRole(bytes32 role, address account) public onlyRole(getRoleAdmin(role)) {
-        _roles[role][account] = true;
-        emit RoleGranted(role, account, msg.sender);
-    }
-
-    function revokeRole(bytes32 role, address account) public onlyRole(getRoleAdmin(role)) {
-        _roles[role][account] = false;
-        emit RoleRevoked(role, account, msg.sender);
-    }
-
-    function _setRoleAdmin(bytes32 role, bytes32 adminRole) internal {
-        _roleAdmins[role] = adminRole;
+    // View details
+    function getProduct(uint256 productId)
+        external
+        view
+        returns (Product memory)
+    {
+        return _products[productId];
     }
 }
