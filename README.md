@@ -1,21 +1,21 @@
-🧠 ValueCentric — Privacy-Preserving Blockchain Supply Chain
+# ValueCentric — Privacy-Preserving Blockchain Supply Chain
 
 ValueCentric revolutionizes supply chain management by creating a privacy-preserving blockchain ecosystem that allows transparent verification while protecting sensitive commercial data through zero-knowledge proof (ZKP) simulation.
 It uses Solidity, OpenZeppelin-style AccessControl, and Ganache + Remix + MetaMask for development and testing.
 
-📦 Features
+## Features
 
-- 🔐 Privacy-preserving verification using simulated ZK-SNARK proofs
+-  Privacy-preserving verification using simulated ZK-SNARK proofs
 
-- 👥 Role-based access control for participants (Supplier, Manufacturer, Distributor, Retailer)
+-  Role-based access control for participants (Supplier, Manufacturer, Distributor, Retailer)
 
-- 🧾 End-to-end traceability via blockchain event logs
+-  End-to-end traceability via blockchain event logs
 
-- 🧱 On-chain commitments to simulate product verification
+-  On-chain commitments to simulate product verification
 
-- ⚙️ Lightweight simulation of ZKP to enable low-cost local testing
+-  Lightweight simulation of ZKP to enable low-cost local testing
 
-🏗️ Smart Contract Architecture
+## Smart Contract Architecture
 ```bash
 contracts/
 │
@@ -40,13 +40,13 @@ hasRole(bytes32 role, address account)	- Verifies participant role
 getProductOwner(uint256 productId) -	Returns current owner
 getCommitment(uint256 productId) -	Returns commitment hash
 
-🧰 Prerequisites
+## Prerequisites
 
 1. Install Ganache
 2. Setup MetaMask
 3. Open Remix IDE
-4. ⚙️ Compilation
-5. 🚀 Deployment
+4. Compilation
+5. Deployment
 
 ```bash
 registerParticipant(keccak256("SUPPLIER"), 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4)
